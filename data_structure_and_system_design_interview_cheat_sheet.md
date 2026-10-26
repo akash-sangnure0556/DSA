@@ -21,45 +21,116 @@ Keep the **most recently used** item at the front and the **least recently used*
 
 ### C++ solution
 ```cpp
+```cpp
+#include <iostream>
+#include <list>
+#include <unordered_map>
+using namespace std;
+
 class LRUCache {
+private:
     int capacity;
-    list<pair<int, int>> dll; // {key, value}; front = most recently used
+
+    // Stores {key, value}
+    // Front = Most Recently Used
+    // Back  = Least Recently Used
+    list<pair<int, int>> cache;
+
+    // Maps each key to its position in the linked list
     unordered_map<int, list<pair<int, int>>::iterator> mp;
 
-    void makeRecent(list<pair<int, int>>::iterator it) {
-        dll.splice(dll.begin(), dll, it); // move node to front in O(1)
+public:
+    // Constructor
+    LRUCache(int cap) {
+        capacity = cap;
     }
 
-public:
-    LRUCache(int capacity) : capacity(capacity) {}
+    // Move an existing item to the front
+    void makeRecent(list<pair<int, int>>::iterator it) {
+        cache.splice(cache.begin(), cache, it);
+    }
 
+    // Get the value for a key
     int get(int key) {
         auto it = mp.find(key);
-        if (it == mp.end()) return -1;
 
+        // Key does not exist
+        if (it == mp.end()) {
+            return -1;
+        }
+
+        // Key exists, so make it most recently used
         makeRecent(it->second);
+
+        // Return the value
         return it->second->second;
     }
 
+    // Insert a new key or update an existing key
     void put(int key, int value) {
         auto it = mp.find(key);
 
+        // If the key already exists
         if (it != mp.end()) {
             it->second->second = value;
             makeRecent(it->second);
             return;
         }
 
-        if ((int)dll.size() == capacity) {
-            int oldKey = dll.back().first;
+        // If cache is full, remove the least recently used item
+        if (cache.size() == capacity) {
+            int oldKey = cache.back().first;
+
             mp.erase(oldKey);
-            dll.pop_back();
+            cache.pop_back();
         }
 
-        dll.push_front({key, value});
-        mp[key] = dll.begin();
+        // Insert the new item at the front
+        cache.push_front({key, value});
+
+        // Store the iterator of the new item
+        mp[key] = cache.begin();
+    }
+
+    // Display the cache from most to least recently used
+    void display() {
+        cout << "Cache: ";
+
+        for (auto item : cache) {
+            cout << "[" << item.first << ":" << item.second << "] ";
+        }
+
+        cout << endl;
     }
 };
+
+int main() {
+    LRUCache cache(2);  // Cache capacity = 2
+
+    cache.put(1, 100);
+    cache.display();
+
+    cache.put(2, 200);
+    cache.display();
+
+    cout << "Get key 1: " << cache.get(1) << endl;
+    cache.display();
+
+    cache.put(3, 300);
+    cache.display();
+
+    cout << "Get key 2: " << cache.get(2) << endl;
+
+    cache.put(4, 400);
+    cache.display();
+
+    cout << "Get key 1: " << cache.get(1) << endl;
+    cout << "Get key 3: " << cache.get(3) << endl;
+    cout << "Get key 4: " << cache.get(4) << endl;
+
+    return 0;
+}
+```
 ```
 
 ### Four steps to explain
